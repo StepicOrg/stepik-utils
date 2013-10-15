@@ -1,4 +1,4 @@
-stepic_code
+stepic-utils
 ==========
 
 Modules for running user exercises on stepic.
