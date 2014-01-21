@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import sys
 import argparse
 import random
@@ -10,6 +12,7 @@ GENERATE_COMMAND = 'generate'
 SCORE_COMMAND = 'score'
 SOLVE_COMMAND = 'solve'
 TEST_COMMAND = 'test'
+SAMPLE_COMMAND = 'sample'
 
 DATASET_QUIZ = 'dataset'
 CODE_QUZ = 'code'
@@ -43,6 +46,9 @@ class Runner(object):
         reply = self.quiz.solve(dataset)
         return self.encode(reply)
 
+    def sample(self):
+        return self.encode(self.quiz.sample)
+
 
 def read_bin_stdin():
     binary_input = sys.stdin.buffer.read()
@@ -56,7 +62,8 @@ def write_bin_stdout(data):
 def main():
     parser = argparse.ArgumentParser(description='Test or run python exercise')
     parser.add_argument('-c', '--command', required=True,
-                        choices=[GENERATE_COMMAND, SCORE_COMMAND, SOLVE_COMMAND, TEST_COMMAND])
+                        choices=[GENERATE_COMMAND, SCORE_COMMAND, SOLVE_COMMAND, TEST_COMMAND,
+                                 SAMPLE_COMMAND])
     parser.add_argument('-p', '--code-path', default='user_code.py')
     parser.add_argument('-s', '--seed', type=int)
     parser.add_argument('-t', '--type', default=DATASET_QUIZ, choices=[DATASET_QUIZ, CODE_QUZ])
@@ -92,6 +99,9 @@ def main():
     elif args.command == TEST_COMMAND:
         unittest.main(testLoader=quiz_class.get_test_loader(),
                       module=quiz.module, argv=[sys.argv[0]])
+    elif args.command == SAMPLE_COMMAND:
+        sample = runner.sample()
+        sys.stdout.buffer.write(sample)
     else:
         assert False, 'unknown command'
 

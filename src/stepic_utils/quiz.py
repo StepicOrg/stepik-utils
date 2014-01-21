@@ -37,11 +37,17 @@ def check_signatures(specs):
 
 class BaseQuiz(object):
 
-    def __init__(self, module, generate_fun, solve_fun, check_fun):
+    def __init__(self, module, generate_fun, solve_fun, check_fun, tests):
         self.module = module
         self.generate = self.wrap_generate(generate_fun)
         self.solve = self.wrap_solve(solve_fun)
         self.check = self.wrap_check(check_fun)
+        self.tests = self.clean_tests(tests)
+        if self.tests:
+            dataset, clue, reply = self.tests[0]
+        else:
+            dataset, clue, reply = '', '', ''
+        self.sample = (dataset, reply)
 
     @classmethod
     def import_quiz(cls, path_or_module):
@@ -64,7 +70,8 @@ class BaseQuiz(object):
         generate = getattr(module, 'generate', None)
         solve = getattr(module, 'solve')
         check = getattr(module, 'check')
-        return cls(module, generate, solve, check)
+        tests = getattr(module, 'tests', [])
+        return cls(module, generate, solve, check, tests)
 
     @classmethod
     def load_tests(cls, module):
@@ -159,10 +166,31 @@ class BaseQuiz(object):
             fail_with_message("hint should be a str")
         return hint
 
+    @staticmethod
+    def clean_tests(tests):
+        msg = "`tests` should be a list of triples: [(dataset, clue, reply)]"
+        if not isinstance(tests, list):
+            fail_with_message(msg)
+        for test in tests:
+            if not isinstance(test, tuple) or len(test) != 3:
+                fail_with_message(msg)
+            dataset, clue, reply = test
+            if not(isinstance(dataset, str)):
+                fail_with_message("dataset in `tests` should be a string instead of {t}\n{test_case}".format(
+                    t=type(dataset),
+                    test_case=(dataset, clue, reply)
+                ))
+            if not(isinstance(reply, str)):
+                fail_with_message("reply in `tests` should be a string instead of {t}\n{test_case}".format(
+                    t=type(reply),
+                    test_case=(dataset, clue, reply)
+                ))
+        return tests
+
 
 class DatasetQuiz(BaseQuiz):
 
-    def __init__(self, module, generate_fun, solve_fun, check_fun):
+    def __init__(self, module, generate_fun, solve_fun, check_fun, tests):
         if generate_fun is None:
             check_signatures([("solve", solve_fun, 0),
                               ("check", check_fun, 1)])
@@ -174,7 +202,7 @@ class DatasetQuiz(BaseQuiz):
                               ("solve", solve_fun, 1),
                               ("check", check_fun, 2)])
             generate, solve, check = generate_fun, solve_fun, check_fun
-        super().__init__(module, generate, solve, check)
+        super().__init__(module, generate, solve, check, tests)
 
     def self_check(self):
         dataset, clue = self.generate()
@@ -184,13 +212,13 @@ class DatasetQuiz(BaseQuiz):
 
 
 class CodeQuiz(BaseQuiz):
-    def __init__(self, module, generate_fun, solve_fun, check_fun):
+    def __init__(self, module, generate_fun, solve_fun, check_fun, tests):
         if generate_fun is None:
             fail_with_message("Code Quiz should export generate")
         check_signatures([("generate", generate_fun, 0),
                           ("solve", solve_fun, 1),
                           ("check", check_fun, 2)])
-        super().__init__(module, generate_fun, solve_fun, check_fun)
+        super().__init__(module, generate_fun, solve_fun, check_fun, tests)
 
     def wrap_generate(self, generate):
         @wraps(generate)
@@ -246,29 +274,19 @@ class QuizModuleTest(unittest.TestCase):
     def __init__(self, quiz_cls, module, methodName='runTest'):
         super().__init__(methodName)
         self.quiz = quiz_cls.import_quiz(module)
-        self.tests = getattr(module, 'tests', [])
 
     def runTest(self):
-        msg = "tests should be a list of 3-tuples of strings: [(dataset, clue, reply)]"
-        self.assertIsInstance(self.tests, list, msg)
-        for test in self.tests:
-            self.assertIsInstance(test, tuple, msg)
-            self.assertEqual(len(test), 3, msg)
-            dataset, clue, reply = test
-            self.assertIsInstance(dataset, str, "dataset should be a string")
-            self.assertIsInstance(reply, str, "reply should be a string")
-
         self.testSamples()
         self.testSolve()
 
     def testSamples(self):
-        for dataset, clue, reply in self.tests:
+        for dataset, clue, reply in self.quiz.tests:
             msg = "\nscore(reply, clue) != 1!\nscore({}, {}) == {}"
             score, _ = self.quiz.check(reply, clue)
             self.assertEqual(score, 1, msg.format(reply, clue, score))
 
     def testSolve(self):
-        for dataset, clue, reply in self.tests:
+        for dataset, clue, reply in self.quiz.tests:
             computed_reply = self.quiz.solve(dataset)
             msg = "\nscore(solve(dataset), clue) != 1!\nscore({}, {}) == {}"
             score, _ = self.quiz.check(computed_reply, clue)
