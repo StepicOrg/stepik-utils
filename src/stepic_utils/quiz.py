@@ -233,15 +233,18 @@ class CodeQuiz(BaseQuiz):
             def is_dataset_and_clue(x):
                 return isinstance(x, tuple) and len(x) == 2 and isinstance(x[0], str)
 
+            manual = [(t[0], t[1]) for t in self.tests]
             if all(map(is_dataset, ret)):
-                return [(self.clean_dataset(dataset), self.clean_clue(self.solve(dataset)))
-                        for dataset in ret]
+                return manual + [
+                    (self.clean_dataset(dataset), self.clean_clue(self.solve(dataset)))
+                    for dataset in ret]
             elif all(map(is_dataset_and_clue, ret)):
-                return [(self.clean_dataset(dataset), self.clean_clue(clue))
-                        for dataset, clue in ret]
+                return manual + [(self.clean_dataset(dataset), self.clean_clue(clue))
+                                 for dataset, clue in ret]
             else:
                 fail_with_message("generate() should return list of dataset or list of pairs "
                                   "(dataset, clue) instead of {}".format(ret))
+
         return f
 
     @staticmethod
