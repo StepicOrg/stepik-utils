@@ -32,3 +32,8 @@ class ExamplesTest(TestCase):
         for name in ['ab.py', 'ab_dict.py', 'divisors.py', 'hints.py', 'even_numbers.py', 'fib.py']:
             quiz = get_quiz(name)
             self.assertTrue(quiz.self_check(), "{} failed".format(name))
+
+    def test_float(self):
+        quiz = get_quiz('ab_float.py')
+        dataset, clue = quiz.generate()
+        self.assertIn('file', dataset)

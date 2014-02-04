@@ -25,14 +25,16 @@ def check_signatures(specs):
     """
     specs: [(name, function, expected number of args)]
     """
-    for name, f, n_param in specs:
+    for name, f, n_arguments in specs:
         if not callable(f):
             fail_with_message("`{}` is not callable.".format(name))
-        s = signature(f)
-        if len(s.parameters) != n_param:
-            msg = "Expected `{}` with {} arguments, got {}."
-            parms = ', '.join(s.parameters.keys()) if s.parameters else "none"
-            fail_with_message(msg.format(name, n_param, parms))
+        try:
+            signature(f).bind(* [""] * n_arguments)
+        except TypeError:
+            fail_with_message("`{name}` should accept {n_arguments} argument{s}.".format(
+                name=name,
+                n_arguments=n_arguments,
+                s='' if n_arguments == 1 else 's'))
 
 
 class BaseQuiz(object):
