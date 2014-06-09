@@ -158,8 +158,18 @@ class BaseQuiz(object):
 
     @staticmethod
     def clean_score(score):
-        if not (isinstance(score, numbers.Real) and (0.0 <= score <= 1.0)):
+        def is_within_delta(x, target):
+            return abs(x - target) < delta
+
+        delta = 1e-6
+        if not (isinstance(score, numbers.Real) and (0 - delta < score < 1 + delta)):
             fail_with_message("score should be a number in range [0, 1]")
+
+        score = min(1, max(0, score))
+        if is_within_delta(score, 0):
+            score = 0
+        if is_within_delta(score, 1):
+            score = 1
         return score
 
     @staticmethod

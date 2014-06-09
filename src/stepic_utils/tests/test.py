@@ -37,3 +37,8 @@ class ExamplesTest(TestCase):
         quiz = get_quiz('ab_float.py')
         dataset, clue = quiz.generate()
         self.assertIn('file', dataset)
+
+    def test_score_rounding(self):
+        quiz = get_quiz('rounding_errors.py')
+        self.assertTrue(quiz.check('1', '1')[0])
+        self.assertFalse(quiz.check('1', '2')[0])
