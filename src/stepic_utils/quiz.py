@@ -135,11 +135,8 @@ class BaseQuiz(object):
         if not isinstance(dataset, (dict, str, bytes)):
             msg = "dataset should be one of (dict, str, bytes) instead of {}"
             fail_with_message(msg.format(dataset))
-
-        if isinstance(dataset, (str, bytes)):
-            new_line_char = '\n' if isinstance(dataset, str) else b'\n'
-            if not dataset.endswith(new_line_char):
-                dataset += new_line_char
+        if isinstance(dataset, str) and not dataset.endswith('\n'):
+            dataset += '\n'
         return dataset
 
     @staticmethod
