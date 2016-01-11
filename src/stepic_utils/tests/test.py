@@ -2,7 +2,7 @@ import os
 
 from unittest import TestCase
 
-from ..quiz import DatasetQuiz
+from ..quiz import CodeQuiz, DatasetQuiz
 
 
 def get_quiz(name, quiz_cls=DatasetQuiz):
@@ -42,3 +42,23 @@ class ExamplesTest(TestCase):
         quiz = get_quiz('rounding_errors.py')
         self.assertTrue(quiz.check('1', '1')[0])
         self.assertFalse(quiz.check('1', '2')[0])
+
+    def test_dataset_generate_auto_append_new_line(self):
+        for quiz_filename in ['ab.py', 'ab_newlined.py']:
+            quiz = get_quiz(quiz_filename)
+
+            dataset, clue = quiz.generate()
+
+            self.assertTrue(dataset['file'].endswith('\n'))
+            self.assertEqual(len(dataset['file']), 4)
+
+    def test_code_generate_auto_append_new_line(self):
+        for quiz_filename in ['code_ab.py', 'code_ab_newlined.py']:
+            quiz = get_quiz(quiz_filename, quiz_cls=CodeQuiz)
+
+            tests = quiz.generate()
+
+            self.assertEqual(len(tests), 10)
+            for dataset, clue in tests:
+                self.assertTrue(dataset.endswith('\n'))
+                self.assertEqual(len(dataset), 4)
