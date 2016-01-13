@@ -135,9 +135,8 @@ class BaseQuiz(object):
         if not isinstance(dataset, (dict, str, bytes)):
             msg = "dataset should be one of (dict, str, bytes) instead of {}"
             fail_with_message(msg.format(dataset))
-
-        if isinstance(dataset, (str, bytes)):
-            dataset = {'file': dataset}
+        if isinstance(dataset, str) and not dataset.endswith('\n'):
+            dataset += '\n'
         return dataset
 
     @staticmethod
@@ -216,6 +215,13 @@ class DatasetQuiz(BaseQuiz):
             generate, solve, check = generate_fun, solve_fun, check_fun
         super().__init__(module, generate, solve, check, tests)
 
+    @staticmethod
+    def clean_dataset(dataset):
+        dataset = BaseQuiz.clean_dataset(dataset)
+        if isinstance(dataset, (str, bytes)):
+            dataset = {'file': dataset}
+        return dataset
+
     def self_check(self):
         dataset, clue = self.generate()
         answer = self.solve(dataset)
@@ -263,6 +269,7 @@ class CodeQuiz(BaseQuiz):
     def clean_dataset(dataset):
         if not isinstance(dataset, str):
             fail_with_message("dataset should be a str instead of {}".format(dataset))
+        dataset = BaseQuiz.clean_dataset(dataset)
         return dataset
 
     def self_check(self):
