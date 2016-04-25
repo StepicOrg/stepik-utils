@@ -120,7 +120,7 @@ class BaseQuiz(object):
                     score_value, hint = ret
                 except ValueError:
                     fail_with_message("check() returned a tuple but it's length is not 2.\n"
-                                      "check should return either a score or a (score, hit) tuple.")
+                                      "check should return either a score or a (score, hint) tuple.")
                     assert False
             else:
                 score_value = ret
