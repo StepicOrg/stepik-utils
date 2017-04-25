@@ -291,17 +291,14 @@ class StringQuiz(BaseQuiz):
         else:
             check_signatures([("solve", solve_fun, 0),
                               ("check", check_fun, 1)])
-            solve, check = solve_fun, check_fun
+            check = lambda reply, clue: check_fun(reply)
+            solve = solve_fun
         super().__init__(module, generate, solve, check, tests)
 
     def self_check(self):
         answer = self.solve()
         score, hint = self.check(answer)
         return self.without_solve or score == 1
-
-    @classmethod
-    def get_test_loader(cls):
-        return None
 
 
 class QuizTestLoader(unittest.TestLoader):
