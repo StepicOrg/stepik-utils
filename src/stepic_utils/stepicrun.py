@@ -69,7 +69,7 @@ def main():
     parser.add_argument('-s', '--seed', type=int)
     parser.add_argument('-t', '--type', default=DATASET_QUIZ, choices=[DATASET_QUIZ, CODE_QUIZ, STRING_QUIZ])
     args = parser.parse_args()
-    print(args.type)
+
     if args.type == DATASET_QUIZ:
         quiz_class = DatasetQuiz
     elif args.type == CODE_QUIZ:
