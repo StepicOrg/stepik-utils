@@ -292,7 +292,7 @@ class StringQuiz(BaseQuiz):
             check_signatures([("solve", solve_fun, 0),
                               ("check", check_fun, 1)])
             check = lambda reply, clue: check_fun(reply)
-            solve = solve_fun
+            solve = lambda dataset: solve_fun()
         super().__init__(module, generate, solve, check, tests)
 
     def self_check(self):
