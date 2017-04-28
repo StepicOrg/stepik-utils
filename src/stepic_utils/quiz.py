@@ -283,15 +283,15 @@ class StringQuiz(BaseQuiz):
 
     def __init__(self, module, generate_fun, solve_fun, check_fun, tests):
         generate = lambda: ({}, '')
+        check = lambda reply, clue: check_fun(reply)
+
         self.without_solve = solve_fun is None
         if self.without_solve:
             check_signatures([("check", check_fun, 1)])
             solve = lambda dataset: ''
-            check = lambda reply, clue: check_fun(reply)
         else:
             check_signatures([("solve", solve_fun, 0),
                               ("check", check_fun, 1)])
-            check = lambda reply, clue: check_fun(reply)
             solve = lambda dataset: solve_fun()
         super().__init__(module, generate, solve, check, tests)
 
