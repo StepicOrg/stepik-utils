@@ -296,8 +296,8 @@ class StringQuiz(BaseQuiz):
         super().__init__(module, generate, solve, check, tests)
 
     def self_check(self):
-        answer = self.solve()
-        score, hint = self.check(answer)
+        answer = self.solve(None)
+        score, hint = self.check(answer, None)
         return self.without_solve or score == 1
 
 
