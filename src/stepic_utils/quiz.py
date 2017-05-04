@@ -29,7 +29,7 @@ def check_signatures(specs):
         if not callable(f):
             fail_with_message("`{}` is not callable.".format(name))
         try:
-            signature(f).bind(* [""] * n_arguments)
+            signature(f).bind(*[""] * n_arguments)
         except TypeError:
             fail_with_message("`{name}` should accept {n_arguments} argument{s}.".format(
                 name=name,
@@ -38,6 +38,7 @@ def check_signatures(specs):
 
 
 class BaseQuiz(object):
+    attrs = ['check', 'solve']
 
     def __init__(self, module, generate_fun, solve_fun, check_fun, tests):
         self.module = module
@@ -64,13 +65,13 @@ class BaseQuiz(object):
             module = path_or_module
 
         no_function_msg = "Can't export `{}` from quiz module.\nQuiz should export {}."
-        attrs = ['solve', 'check']
-        for attr in attrs:
+
+        for attr in cls.attrs:
             if not hasattr(module, attr):
-                fail_with_message(no_function_msg.format(attr, ', '.join(attrs)))
+                fail_with_message(no_function_msg.format(attr, ', '.join(cls.attrs)))
 
         generate = getattr(module, 'generate', None)
-        solve = getattr(module, 'solve')
+        solve = getattr(module, 'solve', None)
         check = getattr(module, 'check')
         tests = getattr(module, 'tests', [])
         return cls(module, generate, solve, check, tests)
@@ -101,6 +102,7 @@ class BaseQuiz(object):
             dataset = self.clean_dataset(dataset)
             clue = self.clean_clue(clue)
             return dataset, clue
+
         return f
 
     def wrap_solve(self, solve):
@@ -109,6 +111,7 @@ class BaseQuiz(object):
             if isinstance(dataset, dict) and 'file' in dataset and len(dataset) == 1:
                 dataset = dataset['file']
             return self.clean_answer(call_user_code(solve, dataset))
+
         return f
 
     def wrap_check(self, check):
@@ -128,6 +131,7 @@ class BaseQuiz(object):
             score_value = self.clean_score(score_value)
             hint = self.clean_hint(hint)
             return score_value, hint
+
         return f
 
     @staticmethod
@@ -187,12 +191,12 @@ class BaseQuiz(object):
             if not isinstance(test, tuple) or len(test) != 3:
                 fail_with_message(msg)
             dataset, clue, reply = test
-            if not(isinstance(dataset, str)):
+            if not (isinstance(dataset, str)):
                 fail_with_message("dataset in `tests` should be a string instead of {t}\n{test_case}".format(
                     t=type(dataset),
                     test_case=(dataset, clue, reply)
                 ))
-            if not(isinstance(reply, str)):
+            if not (isinstance(reply, str)):
                 fail_with_message("reply in `tests` should be a string instead of {t}\n{test_case}".format(
                     t=type(reply),
                     test_case=(dataset, clue, reply)
@@ -201,7 +205,6 @@ class BaseQuiz(object):
 
 
 class DatasetQuiz(BaseQuiz):
-
     def __init__(self, module, generate_fun, solve_fun, check_fun, tests):
         if generate_fun is None:
             check_signatures([("solve", solve_fun, 0),
@@ -270,8 +273,32 @@ class CodeQuiz(BaseQuiz):
             answer = self.solve(dataset)
             score, hint = self.check(answer, clue)
             return score == 1
+
         test_cases = self.generate()
         return all(itertools.starmap(is_correct, test_cases))
+
+
+class StringQuiz(BaseQuiz):
+    attrs = ['check']
+
+    def __init__(self, module, generate_fun, solve_fun, check_fun, tests):
+        generate = lambda: ({}, '')
+        check = lambda reply, clue: check_fun(reply)
+
+        self.without_solve = solve_fun is None
+        if self.without_solve:
+            check_signatures([("check", check_fun, 1)])
+            solve = lambda dataset: ''
+        else:
+            check_signatures([("solve", solve_fun, 0),
+                              ("check", check_fun, 1)])
+            solve = lambda dataset: solve_fun()
+        super().__init__(module, generate, solve, check, tests)
+
+    def self_check(self):
+        answer = self.solve(None)
+        score, hint = self.check(answer, None)
+        return self.without_solve or score == 1
 
 
 class QuizTestLoader(unittest.TestLoader):

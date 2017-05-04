@@ -2,7 +2,7 @@ import os
 
 from unittest import TestCase
 
-from ..quiz import DatasetQuiz
+from ..quiz import DatasetQuiz, StringQuiz
 
 
 def get_quiz(name, quiz_cls=DatasetQuiz):
@@ -42,3 +42,12 @@ class ExamplesTest(TestCase):
         quiz = get_quiz('rounding_errors.py')
         self.assertTrue(quiz.check('1', '1')[0])
         self.assertFalse(quiz.check('1', '2')[0])
+
+    def test_self_check_success(self):
+        for name in ['string_quiz_with_solve.py', 'string_quiz_without_solve.py']:
+            quiz = get_quiz(name, quiz_cls=StringQuiz)
+            self.assertTrue(quiz.self_check())
+
+    def test_self_check_fail(self):
+        quiz = get_quiz('string_quiz_with_solve_fail.py', quiz_cls=StringQuiz)
+        self.assertFalse(quiz.self_check())

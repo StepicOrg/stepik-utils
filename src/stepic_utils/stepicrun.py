@@ -6,7 +6,7 @@ import random
 import unittest
 
 from stepic_utils import utils
-from stepic_utils.quiz import DatasetQuiz, CodeQuiz
+from stepic_utils.quiz import DatasetQuiz, CodeQuiz, StringQuiz
 
 GENERATE_COMMAND = 'generate'
 SCORE_COMMAND = 'score'
@@ -15,7 +15,8 @@ TEST_COMMAND = 'test'
 SAMPLE_COMMAND = 'sample'
 
 DATASET_QUIZ = 'dataset'
-CODE_QUZ = 'code'
+CODE_QUIZ = 'code'
+STRING_QUIZ = 'string'
 
 
 class Runner(object):
@@ -66,13 +67,15 @@ def main():
                                  SAMPLE_COMMAND])
     parser.add_argument('-p', '--code-path', default='user_code.py')
     parser.add_argument('-s', '--seed', type=int)
-    parser.add_argument('-t', '--type', default=DATASET_QUIZ, choices=[DATASET_QUIZ, CODE_QUZ])
+    parser.add_argument('-t', '--type', default=DATASET_QUIZ, choices=[DATASET_QUIZ, CODE_QUIZ, STRING_QUIZ])
     args = parser.parse_args()
 
     if args.type == DATASET_QUIZ:
         quiz_class = DatasetQuiz
-    elif args.type == CODE_QUZ:
+    elif args.type == CODE_QUIZ:
         quiz_class = CodeQuiz
+    elif args.type == STRING_QUIZ:
+        quiz_class = StringQuiz
     else:
         assert False
 
