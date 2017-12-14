@@ -23,7 +23,9 @@ def import_module(path):
 
 def check_signatures(specs):
     """
-    specs: [(name, function, expected number of args)]
+    Check if a function is callable and has a required number of arguments.
+
+    :param specs: [(name, function, expected number of args)]
     """
     for name, f, n_arguments in specs:
         if not callable(f):
@@ -38,12 +40,12 @@ def check_signatures(specs):
 
 
 class BaseQuiz(object):
-    attrs = ['check', 'solve']
+    export_attrs = ['check', 'solve']
 
     def __init__(self, module, generate_fun, solve_fun, check_fun, tests):
         self.module = module
         self.generate = self.wrap_generate(generate_fun)
-        self.solve = self.wrap_solve(solve_fun)
+        self.solve = self.wrap_solve(solve_fun) if solve_fun is not None else None
         self.check = self.wrap_check(check_fun)
         self.tests = self.clean_tests(tests)
         if self.tests:
@@ -64,11 +66,15 @@ class BaseQuiz(object):
             assert isinstance(path_or_module, types.ModuleType)
             module = path_or_module
 
-        no_function_msg = "Can't export `{}` from quiz module.\nQuiz should export {}."
-
-        for attr in cls.attrs:
+        no_function_msg = ("Can't import '{}' from the challenge module.\n"
+                           "It should export {a}{funcs} function{s}.")
+        for attr in cls.export_attrs:
             if not hasattr(module, attr):
-                fail_with_message(no_function_msg.format(attr, ', '.join(cls.attrs)))
+                fail_with_message(no_function_msg.format(
+                    attr,
+                    a='a ' if len(cls.export_attrs) == 1 else '',
+                    funcs=', '.join("'{}'".format(a) for a in cls.export_attrs),
+                    s='s' if len(cls.export_attrs) > 1 else ''))
 
         generate = getattr(module, 'generate', None)
         solve = getattr(module, 'solve', None)
@@ -227,12 +233,15 @@ class DatasetQuiz(BaseQuiz):
 
 
 class CodeQuiz(BaseQuiz):
+    export_attrs = ['generate', 'check']
+
     def __init__(self, module, generate_fun, solve_fun, check_fun, tests):
-        if generate_fun is None:
-            fail_with_message("Code Quiz should export generate")
-        check_signatures([("generate", generate_fun, 0),
-                          ("solve", solve_fun, 1),
-                          ("check", check_fun, 2)])
+        signature_specs = [("generate", generate_fun, 0),
+                           ("check", check_fun, 2)]
+        self.has_solve = solve_fun is not None
+        if self.has_solve:
+            signature_specs.append(("solve", solve_fun, 1))
+        check_signatures(signature_specs)
         super().__init__(module, generate_fun, solve_fun, check_fun, tests)
 
     def wrap_generate(self, generate):
@@ -250,9 +259,11 @@ class CodeQuiz(BaseQuiz):
 
             manual = [(t[0], t[1]) for t in self.tests]
             if all(map(is_dataset, ret)):
-                return manual + [
-                    (self.clean_dataset(dataset), self.clean_clue(self.solve(dataset)))
+                generated_tests = [
+                    (self.clean_dataset(dataset),
+                     self.clean_clue(self.solve(dataset)) if self.has_solve else None)
                     for dataset in ret]
+                return manual + generated_tests
             elif all(map(is_dataset_and_clue, ret)):
                 return manual + [(self.clean_dataset(dataset), self.clean_clue(clue))
                                  for dataset, clue in ret]
@@ -270,6 +281,9 @@ class CodeQuiz(BaseQuiz):
 
     def self_check(self):
         def is_correct(dataset, clue):
+            if not self.has_solve:
+                self.check('', clue)
+                return True
             answer = self.solve(dataset)
             score, hint = self.check(answer, clue)
             return score == 1
@@ -279,7 +293,7 @@ class CodeQuiz(BaseQuiz):
 
 
 class StringQuiz(BaseQuiz):
-    attrs = ['check']
+    export_attrs = ['check']
 
     def __init__(self, module, generate_fun, solve_fun, check_fun, tests):
         generate = lambda: ({}, '')
