@@ -42,6 +42,8 @@ class JSONEncoder(json.JSONEncoder):
 class JSONDecoder(json.JSONDecoder):
     def decode(self, s, **kwargs):
         obj = super().decode(s, **kwargs)
+        if not isinstance(obj, dict):
+            return obj
         if '_serialized.decimal' in obj:
             return decimal.Decimal(obj['_serialized.decimal'])
         if '_serialized.datetime' in obj:

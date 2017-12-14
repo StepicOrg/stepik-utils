@@ -1,27 +1,12 @@
 import os
 import textwrap
 
-from io import StringIO
-from contextlib import contextmanager
 from importlib.machinery import ModuleSpec
 from importlib.util import module_from_spec
 from unittest import TestCase
-from unittest.mock import patch
 
-from stepic_utils.quiz import check_signatures
-from ..quiz import CodeQuiz, DatasetQuiz, StringQuiz
-
-
-class BaseTest(TestCase):
-    @contextmanager
-    def assert_fail_with_message(self, expected_message):
-        fake_stderr = StringIO()
-        with patch('sys.stderr', fake_stderr):
-            with self.assertRaises(SystemExit):
-                yield
-            stderr = fake_stderr.getvalue()
-            self.assertEqual(stderr, expected_message,
-                             "Expected: {}\nGot: {}".format(expected_message, stderr))
+from .utils import BaseTest
+from ..quiz import CodeQuiz, DatasetQuiz, StringQuiz, check_signatures
 
 
 def get_quiz(name=None, code=None, quiz_cls=DatasetQuiz):

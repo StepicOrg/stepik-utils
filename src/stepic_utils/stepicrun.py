@@ -13,6 +13,7 @@ SCORE_COMMAND = 'score'
 SOLVE_COMMAND = 'solve'
 TEST_COMMAND = 'test'
 SAMPLE_COMMAND = 'sample'
+HAS_SOLVE_COMMAND = 'has_solve'
 
 DATASET_QUIZ = 'dataset'
 CODE_QUIZ = 'code'
@@ -50,6 +51,9 @@ class Runner(object):
     def sample(self):
         return self.encode(self.quiz.sample)
 
+    def has_solve(self):
+        return self.encode(self.quiz.has_solve)
+
 
 def read_bin_stdin():
     binary_input = sys.stdin.buffer.read()
@@ -60,15 +64,15 @@ def write_bin_stdout(data):
     sys.stdout.buffer.write(data)
 
 
-def main():
+def main(args=None):
     parser = argparse.ArgumentParser(description='Test or run python exercise')
     parser.add_argument('-c', '--command', required=True,
                         choices=[GENERATE_COMMAND, SCORE_COMMAND, SOLVE_COMMAND, TEST_COMMAND,
-                                 SAMPLE_COMMAND])
+                                 SAMPLE_COMMAND, HAS_SOLVE_COMMAND])
     parser.add_argument('-p', '--code-path', default='user_code.py')
     parser.add_argument('-s', '--seed', type=int)
     parser.add_argument('-t', '--type', default=DATASET_QUIZ, choices=[DATASET_QUIZ, CODE_QUIZ, STRING_QUIZ])
-    args = parser.parse_args()
+    args = parser.parse_args(args=args)
 
     if args.type == DATASET_QUIZ:
         quiz_class = DatasetQuiz
@@ -105,8 +109,15 @@ def main():
     elif args.command == SAMPLE_COMMAND:
         sample = runner.sample()
         sys.stdout.buffer.write(sample)
+    elif args.command == HAS_SOLVE_COMMAND:
+        if quiz_class != CodeQuiz:
+            print("error: '{}' command is applicable only for {} quiz."
+                  .format(HAS_SOLVE_COMMAND, CODE_QUIZ))
+            sys.exit(1)
+        write_bin_stdout(runner.has_solve())
     else:
         assert False, 'unknown command'
+
 
 if __name__ == '__main__':
     main()
