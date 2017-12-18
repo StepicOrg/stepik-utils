@@ -4,7 +4,8 @@ def generate():
 
 def solve(dataset):
     assert dataset in ['2 2\n', '5 7\n']
-    return str(sum(map(int, dataset.split())))
+    a, b = dataset.split()
+    return str(int(a) + int(b))
 
 
 def check(reply, clue):
