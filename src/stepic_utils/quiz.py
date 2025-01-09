@@ -321,7 +321,7 @@ class QuizTestLoader(unittest.TestLoader):
         super().__init__()
 
     def loadTestsFromModule(self, module, use_load_tests=True):
-        suite = super().loadTestsFromModule(module, use_load_tests)
+        suite = super().loadTestsFromModule(module)  # ignore use_load_tests for Python 3.12+ support, CT-53
         suite.addTest(self.quiz_cls.load_tests(module))
         return suite
 
