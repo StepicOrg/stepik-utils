@@ -39,7 +39,7 @@ def check_signatures(specs):
                 s='' if n_arguments == 1 else 's'))
 
 
-class BaseQuiz(object):
+class BaseQuiz:
     export_attrs = ['check', 'solve']
 
     def __init__(self, module, generate_fun, solve_fun, check_fun, tests):

@@ -1,0 +1,32 @@
+[project]
+name = "stepic_utils"
+description = "Stepik utils"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.6"
+dynamic = ["version"]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+
+[project.scripts]
+stepicrun = "stepic_utils.stepicrun:main"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+version = {attr = "stepic_utils.__version__"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.uv.sources]
+stepic-common = { git = "https://github.com/StepicOrg/stepic-common.git" }
+
+[dependency-groups]
+dev = [
+    "stepic-common",
+]

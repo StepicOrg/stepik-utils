@@ -20,7 +20,7 @@ CODE_QUIZ = 'code'
 STRING_QUIZ = 'string'
 
 
-class Runner(object):
+class Runner:
     """
     Runs user code and deals with encodings
     """
